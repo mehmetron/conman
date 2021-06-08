@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	//"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -24,63 +25,29 @@ type Language struct {
 	Image  string
 }
 
-// func Test(docker *client.Client) {
-// 	ctx := context.Background()
-// 	// cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-// 	// if err != nil {
-// 	// 	panic(err)
-// 	// }
+type DockerEnv struct {
+	docker *client.Client
+}
 
-// 	reader, err := docker.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	io.Copy(os.Stdout, reader)
+func InitializeDocker() (*client.Client, error) {
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
 
-// 	resp, err := docker.ContainerCreate(ctx, &container.Config{
-// 		Image: "alpine",
-// 		Cmd:   []string{"sleep", "5"},
-// 		Tty:   false,
-// 	}, nil, nil, nil, "")
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	if err := docker.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-// 		panic(err)
-// 	}
-
-// 	statusCh, errCh := docker.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-// 	select {
-// 	case err := <-errCh:
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 	case <-statusCh:
-// 	}
-
-// 	out, err := docker.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
-// }
+	return docker, err
+}
 
 // Create container
-func Create(env *Env, demoPort string, apiPort string, langID int) string {
+func (env *DockerEnv) CreateContainer(demoPort string, apiPort string, langID int) string {
 
 	n := make(map[int]Language)
-	n[1] = Language{LangID: 1, Name: "python", Image: "1c4e16e817b4"}
+	n[1] = Language{LangID: 1, Name: "python", Image: "nginx"}
 	n[2] = Language{LangID: 2, Name: "go", Image: ""}
 	n[3] = Language{LangID: 3, Name: "javascript", Image: ""}
 	n[4] = Language{LangID: 4, Name: "java", Image: ""}
 
 	image := n[langID].Image
-
-	// ctx := context.Background()
-	// cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	// check(err)
 
 	// memoryLimit := int64(30 * 1024 * 1024)
 	// resourceConfig := container.Resources{Memory: memoryLimit}
@@ -126,19 +93,6 @@ func Create(env *Env, demoPort string, apiPort string, langID int) string {
 		panic(err)
 	}
 
-	// resp, err := cli.ContainerCreate(ctx, &container.Config{
-	// 	Image: image,
-	// 	Tty:   true,
-	// }, &container.HostConfig{Resources: resourceConfig}, nil, nil, "")
-	// check(err)
-
-	// if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-	// 	panic(err)
-	// }
-
-	// demohosturl := "subdomain123"
-	// apihosturl just appends "galatatower" to subdomain of demohosturl so no need to send it
-
 	// return ContainerOutput{
 	// 	ContainerID: resp.ID,
 	// 	DemoHost:    demohosturl,
@@ -147,7 +101,7 @@ func Create(env *Env, demoPort string, apiPort string, langID int) string {
 }
 
 // Remove container
-func DeleteContainer(env *Env, containerID string) (string, error) {
+func (env *DockerEnv) DeleteContainer(containerID string) (string, error) {
 
 	err := env.docker.ContainerStop(context.TODO(), containerID, nil)
 	if err != nil {
@@ -156,7 +110,40 @@ func DeleteContainer(env *Env, containerID string) (string, error) {
 	}
 
 	err = env.docker.ContainerRemove(context.TODO(), containerID, types.ContainerRemoveOptions{})
-	check(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	return "Success removing container!", nil
+}
+
+func (env *DockerEnv) DeleteAllContainers() {
+
+	containers, err := env.docker.ContainerList(context.TODO(), types.ContainerListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	for _, container := range containers {
+		fmt.Print("Stopping container ", container.ID[:10], "... ")
+		env.DeleteContainer(container.ID)
+		fmt.Println("Success")
+	}
+
+}
+
+func (env *DockerEnv) PauseContainer(containerID string) {
+
+	err := env.docker.ContainerPause(context.TODO(), containerID)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func (env *DockerEnv) UnPauseContainer(containerID string) {
+
+	err := env.docker.ContainerUnpause(context.TODO(), containerID)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

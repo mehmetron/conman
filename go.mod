@@ -12,6 +12,11 @@ require (
 	github.com/containerd/containerd v1.5.1 // indirect
 	github.com/docker/docker v20.10.6+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/ermos/chalk v0.0.0-20201126145954-216cfaa8732f // indirect
+	github.com/ermos/cli v0.0.2 // indirect
+	github.com/ermos/gomon v0.0.0-20201127000642-87ef922adbe5 // indirect
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	google.golang.org/grpc v1.37.1 // indirect
 )

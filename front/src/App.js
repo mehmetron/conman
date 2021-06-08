@@ -1,55 +1,37 @@
-import React, { Component } from 'react';
-import Header from './components/Header/Header';
-import ChatHistory from './components/ChatHistory/ChatHistory';
-import ChatInput from './components/ChatInput/ChatInput';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+
 import { connect, sendMsg } from './api';
 
-import Xterm from "./xterm";
+import {StyledEditor} from "./components/editor/StyledEditor";
 
 
+function App() {
 
+    const [state, setState] = useState([])
 
-class App extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            chatHistory: []
-        }
-    }
-
-    componentDidMount() {
+    useEffect(()=> {
         connect((msg) => {
             console.log("New Message")
-            this.setState(prevState => ({
-                chatHistory: [...prevState.chatHistory, msg]
-            }))
-            console.log(this.state);
+            setState(prevState => [...prevState, msg])
+
+            console.log(state);
         });
-    }
+    }, [])
 
-    send(event) {
-        if (event.keyCode === 13) {
-            sendMsg(event.target.value);
-            event.target.value = "";
-        }
-    }
-
-
-
-    render() {
+    // function send(event) {
+    //     if (event.keyCode === 13) {
+    //         sendMsg(event.target.value);
+    //         event.target.value = "";
+    //     }
+    // }
 
         return (
-            <div className="App">
-                <Xterm />
-                <Header />
-                <ChatHistory chatHistory={this.state.chatHistory} />
-                <ChatInput send={this.send} />
-
+            <div>
+                <StyledEditor />
 
             </div>
         );
-    }
+
 }
 
 export default App;
