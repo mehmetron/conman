@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Reverse proxy
+// ReverseProxy proxies requests
 func (env *Env) ReverseProxy(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Request Info: ", r.Host, r.Method, r.Proto)

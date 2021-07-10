@@ -1,0 +1,24 @@
+
+
+### Get all instances
+GET http://localhost:8080/allinstances
+
+### Get where
+GET http://localhost:8080/whereto?q=ve09iijals
+
+
+### Delete request
+DELETE http://localhost:8080/destroy
+Content-Type: application/json
+
+{
+  "container_id": "2eb33c7211ca6c301d27af94e9f8c117536c64b5142ab9b6ab27ed02f2212083",
+  "from_host": "t5w9jsqkmg"
+}
+
+### Delete all kvs from etcd
+DELETE http://localhost:8080/destroyall
+
+
+### Create container
+POST http://localhost:8080/create

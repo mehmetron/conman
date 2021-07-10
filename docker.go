@@ -38,24 +38,25 @@ func InitializeDocker() (*client.Client, error) {
 	return docker, err
 }
 
-// Create container
-func (env *DockerEnv) CreateContainer(demoPort string, apiPort string, langID int) string {
+// CreateContainer creates a docker container
+func (env *DockerEnv) CreateContainer(demoPort string, apiPort string) string {
 
-	n := make(map[int]Language)
-	n[1] = Language{LangID: 1, Name: "python", Image: "nginx"}
-	n[2] = Language{LangID: 2, Name: "go", Image: ""}
-	n[3] = Language{LangID: 3, Name: "javascript", Image: ""}
-	n[4] = Language{LangID: 4, Name: "java", Image: ""}
-
-	image := n[langID].Image
+	//n := make(map[int]Language)
+	//n[1] = Language{LangID: 1, Name: "python", Image: "nginx"}
+	//n[2] = Language{LangID: 2, Name: "go", Image: ""}
+	//n[3] = Language{LangID: 3, Name: "javascript", Image: ""}
+	//n[4] = Language{LangID: 4, Name: "java", Image: ""}
+	//
+	//image := n[langID].Image
+	image := "bob"
 
 	// memoryLimit := int64(30 * 1024 * 1024)
 	// resourceConfig := container.Resources{Memory: memoryLimit}
 
-	var ApiContainer nat.Port = "8090/tcp"
+	var ApiContainer nat.Port = "8080/tcp"
 	// ApiHost := "8000"
 
-	var DemoContainer nat.Port = "8000/tcp"
+	var DemoContainer nat.Port = "8090/tcp"
 	// DemoHost := "8090"
 
 	config := &container.Config{
@@ -85,6 +86,7 @@ func (env *DockerEnv) CreateContainer(demoPort string, apiPort string, langID in
 
 	resp, err := env.docker.ContainerCreate(context.TODO(), config, hostConfig, nil, nil, "")
 	if err != nil {
+		fmt.Printf("89 error %s", err)
 		panic(err)
 	}
 
@@ -100,7 +102,7 @@ func (env *DockerEnv) CreateContainer(demoPort string, apiPort string, langID in
 	return resp.ID
 }
 
-// Remove container
+// DeleteContainer deletes a docker container
 func (env *DockerEnv) DeleteContainer(containerID string) (string, error) {
 
 	err := env.docker.ContainerStop(context.TODO(), containerID, nil)
@@ -117,6 +119,7 @@ func (env *DockerEnv) DeleteContainer(containerID string) (string, error) {
 	return "Success removing container!", nil
 }
 
+// DeleteAllContainers deletes all docker containers
 func (env *DockerEnv) DeleteAllContainers() {
 
 	containers, err := env.docker.ContainerList(context.TODO(), types.ContainerListOptions{})
@@ -132,6 +135,7 @@ func (env *DockerEnv) DeleteAllContainers() {
 
 }
 
+// PauseContainer pauses a docker container
 func (env *DockerEnv) PauseContainer(containerID string) {
 
 	err := env.docker.ContainerPause(context.TODO(), containerID)
@@ -140,6 +144,7 @@ func (env *DockerEnv) PauseContainer(containerID string) {
 	}
 }
 
+// UnPauseContainer unpauses a docker container
 func (env *DockerEnv) UnPauseContainer(containerID string) {
 
 	err := env.docker.ContainerUnpause(context.TODO(), containerID)

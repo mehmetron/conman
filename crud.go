@@ -29,29 +29,7 @@ type ListOfetcd struct {
 	Data   []redirectHostStruct `json:"data"`
 }
 
-// ****************** Utils
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz1234567890")
-
-func RandStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
-
-func GeneratePorts() (int, int) {
-	max := 32767 // half of 65535 because other half is for apiPort
-	min := 1024
-	// port := fmt.Sprintf("http://localhost:%d", RandomIntegerwithinRange)
-	RandomInt1 := rand.Intn(max-min) + min // range is min to max
-	RandomInt2 := RandomInt1 + 32767
-	return RandomInt1, RandomInt2 // demoPort, apiPort
-}
-
-// ****************** Utils
-
-// Where does this subdomain go to? || What is the value of this key?
+// WhereTo tells where the subdomain goes to? || What is the value of this key?
 func (env *Env) WhereTo(w http.ResponseWriter, r *http.Request) {
 
 	key := r.URL.Query()["q"][0]
@@ -78,20 +56,20 @@ func (env *Env) WhereTo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Create key:value pair
+// Create creates key:value pair
 func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 
-	// Serialize request body
-	var toCreate CreateSandbox
-	err := json.NewDecoder(r.Body).Decode(&toCreate)
-	if err != nil {
-		fmt.Println(err)
-	}
+	//// Serialize request body
+	//var toCreate CreateSandbox
+	//err := json.NewDecoder(r.Body).Decode(&toCreate)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
 
 	// Generate subdomains
 	rand.Seed(time.Now().UnixNano())
 	demoSubdomain := RandStringRunes(10)
-	apiSubdomain := fmt.Sprintf("%sgalatatower", demoSubdomain)
+	apiSubdomain := fmt.Sprintf("%spid1", demoSubdomain)
 	fmt.Println("gen subdomains", demoSubdomain, apiSubdomain)
 
 	// Find ports
@@ -99,10 +77,12 @@ func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 	demoPort := strconv.Itoa(port1)
 	apiPort := strconv.Itoa(port2)
 
-	fmt.Println("demoSubdomain, apiSubdomain, demoPort, apiPort, toCreate.LangID", demoSubdomain, apiSubdomain, demoPort, apiPort, toCreate.LangID)
+	//fmt.Println("demoSubdomain, apiSubdomain, demoPort, apiPort, toCreate.LangID", demoSubdomain, apiSubdomain, demoPort, apiPort, toCreate.LangID)
+	fmt.Println("demoSubdomain, apiSubdomain, demoPort, apiPort", demoSubdomain, apiSubdomain, demoPort, apiPort)
 
 	// Put demoPort and apiPort into etcd
 	putDemoResp, err := env.etcd.CreateKVs(demoSubdomain, demoPort)
+	//putDemoResp, err := env.etcd.CreateKVs(demoSubdomain, "http://localhost:9003")
 	fmt.Println("CreateKVs putDemoResp: ", putDemoResp)
 	if err != nil {
 		fmt.Println(err)
@@ -115,7 +95,7 @@ func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create docker container
-	res := env.docker.CreateContainer(demoPort, apiPort, toCreate.LangID)
+	res := env.docker.CreateContainer(demoPort, apiPort)
 	fmt.Println("res", res)
 
 	_, err = fmt.Fprintf(w, "demoSubdomain: %s \n apiSubdomain: %s \n res: %s", demoSubdomain, apiSubdomain, res)
@@ -125,7 +105,21 @@ func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Delete key:value pair
+func (env *Env) DestroyAll(w http.ResponseWriter, r *http.Request) {
+
+	delKVResp, err := env.etcd.DeleteAllKV()
+	fmt.Println("DeleteKV delKVResp: ", delKVResp)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = fmt.Fprintf(w, "Destroy World!")
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+// Destroy deletes a key:value pair
 func (env *Env) Destroy(w http.ResponseWriter, r *http.Request) {
 
 	var p DeleteSandbox
@@ -152,6 +146,7 @@ func (env *Env) Destroy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Puase pauses a docker container
 func (env *Env) Pause(w http.ResponseWriter, r *http.Request) {
 
 	containerID := "fakeid"
@@ -159,6 +154,7 @@ func (env *Env) Pause(w http.ResponseWriter, r *http.Request) {
 	env.docker.PauseContainer(containerID)
 }
 
+// UnPuase unpauses a docker container
 func (env *Env) UnPause(w http.ResponseWriter, r *http.Request) {
 
 	containerID := "fakeid"
@@ -166,7 +162,7 @@ func (env *Env) UnPause(w http.ResponseWriter, r *http.Request) {
 	env.docker.UnPauseContainer(containerID)
 }
 
-// Get all instances
+// AllInstances gets all instances
 func (env *Env) AllInstances(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(r.URL)

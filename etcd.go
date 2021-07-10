@@ -30,6 +30,12 @@ func InitializeEtcd() (*clientv3.Client, clientv3.KV) {
 	return cli, kv
 }
 
+// Delete all key:values
+func (env *EtcdEnv) DeleteAllKV() (*clientv3.DeleteResponse, error) {
+	delResp, err := env.etcd.Delete(context.TODO(), "", clientv3.WithPrefix())
+	return delResp, err
+}
+
 // Delete all key:values with _subdomain_ as prefix
 func (env *EtcdEnv) DeleteKV(subdomain string) (*clientv3.DeleteResponse, error) {
 	delResp, err := env.etcd.Delete(context.TODO(), subdomain, clientv3.WithPrefix())
