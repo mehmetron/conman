@@ -32,14 +32,14 @@ type DockerEnv struct {
 func InitializeDocker() (*client.Client, error) {
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to initialize docker: %v", err)
 	}
 
-	return docker, err
+	return docker, nil
 }
 
 // CreateContainer creates a docker container
-func (env *DockerEnv) CreateContainer(demoPort string, apiPort string) string {
+func (env *DockerEnv) CreateContainer(demoPort string, apiPort string) (string, error) {
 
 	//n := make(map[int]Language)
 	//n[1] = Language{LangID: 1, Name: "python", Image: "nginx"}
@@ -86,69 +86,68 @@ func (env *DockerEnv) CreateContainer(demoPort string, apiPort string) string {
 
 	resp, err := env.docker.ContainerCreate(context.TODO(), config, hostConfig, nil, nil, "")
 	if err != nil {
-		fmt.Printf("89 error %s", err)
-		panic(err)
+		return "", fmt.Errorf("failed to create container: %v", err)
 	}
 
 	err = env.docker.ContainerStart(context.TODO(), resp.ID, types.ContainerStartOptions{})
 	if err != nil {
-		panic(err)
+		return "", fmt.Errorf("failed to start container: %v", err)
 	}
 
 	// return ContainerOutput{
 	// 	ContainerID: resp.ID,
 	// 	DemoHost:    demohosturl,
 	// }
-	return resp.ID
+	return resp.ID, nil
 }
 
 // DeleteContainer deletes a docker container
-func (env *DockerEnv) DeleteContainer(containerID string) (string, error) {
+func (env *DockerEnv) DeleteContainer(containerID string) error {
 
 	err := env.docker.ContainerStop(context.TODO(), containerID, nil)
 	if err != nil {
-		fmt.Println(err)
-		return "Failed to remove container", err
+		return fmt.Errorf("failed to stop container: %v", err)
 	}
 
 	err = env.docker.ContainerRemove(context.TODO(), containerID, types.ContainerRemoveOptions{})
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("failed to remove container: %v", err)
 	}
 
-	return "Success removing container!", nil
+	return nil
 }
 
 // DeleteAllContainers deletes all docker containers
-func (env *DockerEnv) DeleteAllContainers() {
+func (env *DockerEnv) DeleteAllContainers() error {
 
 	containers, err := env.docker.ContainerList(context.TODO(), types.ContainerListOptions{})
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to retrieve container list: %v", err)
 	}
 
 	for _, container := range containers {
 		fmt.Print("Stopping container ", container.ID[:10], "... ")
-		env.DeleteContainer(container.ID)
-		fmt.Println("Success")
+		err := env.DeleteContainer(container.ID)
+		if err != nil {
+			return fmt.Errorf("failed to delete container: %v", err)
+		}
 	}
 
+	return nil
 }
 
 // PauseContainer pauses a docker container
-func (env *DockerEnv) PauseContainer(containerID string) {
+func (env *DockerEnv) PauseContainer(containerID string) error {
 
 	err := env.docker.ContainerPause(context.TODO(), containerID)
-	if err != nil {
-		fmt.Println(err)
-	}
+
+	return fmt.Errorf("failed to pause container: %v", err)
 }
 
 // UnPauseContainer unpauses a docker container
-func (env *DockerEnv) UnPauseContainer(containerID string) {
+func (env *DockerEnv) UnPauseContainer(containerID string) error {
 
 	err := env.docker.ContainerUnpause(context.TODO(), containerID)
-	if err != nil {
-		fmt.Println(err)
-	}
+
+	return fmt.Errorf("failed to unpause container: %v", err)
 }

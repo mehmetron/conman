@@ -1,4 +1,6 @@
 
+### Create container
+POST http://localhost:8080/create
 
 ### Get all instances
 GET http://localhost:8080/allinstances
@@ -7,18 +9,35 @@ GET http://localhost:8080/allinstances
 GET http://localhost:8080/whereto?q=ve09iijals
 
 
-### Delete request
-DELETE http://localhost:8080/destroy
+### Pause container
+PUT http://localhost:8080/pause
 Content-Type: application/json
 
 {
-  "container_id": "2eb33c7211ca6c301d27af94e9f8c117536c64b5142ab9b6ab27ed02f2212083",
-  "from_host": "t5w9jsqkmg"
+  "container_id": "5b6d601ed013a480bcd02ea7006f187eab64ff1e3acd08620635d951b343ad21",
+  "from_host": "fesvx9mv7f"
 }
 
-### Delete all kvs from etcd
-DELETE http://localhost:8080/destroyall
+### Unpause container
+PUT http://localhost:8080/unpause
+Content-Type: application/json
+
+{
+  "container_id": "5b6d601ed013a480bcd02ea7006f187eab64ff1e3acd08620635d951b343ad21",
+  "from_host": "fesvx9mv7f"
+}
 
 
-### Create container
-POST http://localhost:8080/create
+### Delete container
+DELETE http://localhost:8080/delete
+Content-Type: application/json
+
+{
+  "container_id": "1216e8b3442ab978aeeaef86474b40bfead333e59374637e071dff5c27b1911f",
+  "from_host": "qet2kttq5j"
+}
+
+### Delete all containers
+DELETE http://localhost:8080/deleteall
+
+

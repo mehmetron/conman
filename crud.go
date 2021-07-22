@@ -81,21 +81,24 @@ func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("demoSubdomain, apiSubdomain, demoPort, apiPort", demoSubdomain, apiSubdomain, demoPort, apiPort)
 
 	// Put demoPort and apiPort into etcd
-	putDemoResp, err := env.etcd.CreateKVs(demoSubdomain, demoPort)
-	//putDemoResp, err := env.etcd.CreateKVs(demoSubdomain, "http://localhost:9003")
-	fmt.Println("CreateKVs putDemoResp: ", putDemoResp)
+	putDemoResp, err := env.etcd.CreateKV(demoSubdomain, demoPort)
+	//putDemoResp, err := env.etcd.CreateKV(demoSubdomain, "http://localhost:9003")
+	fmt.Println("CreateKV putDemoResp: ", putDemoResp)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	putApiResp, err := env.etcd.CreateKVs(apiSubdomain, apiPort)
-	fmt.Println("CreateKVs putApiResp: ", putApiResp)
+	putApiResp, err := env.etcd.CreateKV(apiSubdomain, apiPort)
+	fmt.Println("CreateKV putApiResp: ", putApiResp)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Create docker container
-	res := env.docker.CreateContainer(demoPort, apiPort)
+	res, err := env.docker.CreateContainer(demoPort, apiPort)
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("res", res)
 
 	_, err = fmt.Fprintf(w, "demoSubdomain: %s \n apiSubdomain: %s \n res: %s", demoSubdomain, apiSubdomain, res)
@@ -105,7 +108,8 @@ func (env *Env) Create(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (env *Env) DestroyAll(w http.ResponseWriter, r *http.Request) {
+// DeleteAll deletes all containers
+func (env *Env) DeleteAll(w http.ResponseWriter, r *http.Request) {
 
 	delKVResp, err := env.etcd.DeleteAllKV()
 	fmt.Println("DeleteKV delKVResp: ", delKVResp)
@@ -113,14 +117,19 @@ func (env *Env) DestroyAll(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	_, err = fmt.Fprintf(w, "Destroy World!")
+	err = env.docker.DeleteAllContainers()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = fmt.Fprintf(w, "Successfully deleted all!")
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-// Destroy deletes a key:value pair
-func (env *Env) Destroy(w http.ResponseWriter, r *http.Request) {
+// Delete deletes a key:value pair
+func (env *Env) Delete(w http.ResponseWriter, r *http.Request) {
 
 	var p DeleteSandbox
 	err := json.NewDecoder(r.Body).Decode(&p)
@@ -134,32 +143,55 @@ func (env *Env) Destroy(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	delContainerResp, err := env.docker.DeleteContainer(p.ContainerID)
-	print("DeleteContainer delContainerResp: ", delContainerResp)
+	err = env.docker.DeleteContainer(p.ContainerID)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	_, err = fmt.Fprintf(w, "Destroy World!")
+	_, err = fmt.Fprintf(w, "Successfully deleted!")
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-// Puase pauses a docker container
+// Pause pauses a docker container
 func (env *Env) Pause(w http.ResponseWriter, r *http.Request) {
 
-	containerID := "fakeid"
+	var p DeleteSandbox
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	env.docker.PauseContainer(containerID)
+	err = env.docker.PauseContainer(p.ContainerID)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = fmt.Fprintf(w, "Successfully paused!")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
-// UnPuase unpauses a docker container
+// UnPause unpauses a docker container
 func (env *Env) UnPause(w http.ResponseWriter, r *http.Request) {
 
-	containerID := "fakeid"
+	var p DeleteSandbox
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	env.docker.UnPauseContainer(containerID)
+	err = env.docker.UnPauseContainer(p.ContainerID)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = fmt.Fprintf(w, "Successfully unpaused!")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // AllInstances gets all instances
